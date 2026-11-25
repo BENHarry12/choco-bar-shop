@@ -1,0 +1,21 @@
+<!doctype html><html lang="th"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>สั่งซื้อ | Cocoa Lane</title><link rel="stylesheet" href="style.css">
+<nav></nav><main><h1>สั่งซื้อ</h1><div class="card" id="c"></div><br><form class="card" id="f">
+<label>ชื่อ-นามสกุล<input name="name" required maxlength="100"></label><label>เบอร์โทร<input name="phone" required pattern="0[0-9]{8,9}" inputmode="numeric"></label>
+<label>บ้านเลขที่ หมู่ ซอย ถนน<input name="a" required maxlength="200"></label><label>ตำบล/แขวง<input name="b" required maxlength="50"></label><label>อำเภอ/เขต<input name="d" required maxlength="50"></label><label>จังหวัด<input name="e" required maxlength="50"></label><label>รหัสไปรษณีย์<input name="zip" required pattern="[0-9]{5}" inputmode="numeric"></label>
+<label>หมายเหตุ<input name="note" maxlength="200"></label><p class="err" id="m"></p><button>ยืนยันสั่งซื้อ (เก็บเงินปลายทาง)</button></form></main><script src="config.js"></script><script src="app.js"></script><script>
+function show() {
+const c = cart(); let t = 0;
+$("#c").innerHTML = Object.entries(P).map(([k, x]) => { const q = c[k] || 0; t += q * x.p; return '<div class="row"><span>' + x.n + ' (' + x.p + ' บาท)</span><input type="number" min="0" max="99" value="' + q + '" onchange="setQ(\'' + k + '\',this.value);show()"></div>'; }).join("") + "<b>รวม " + (t ? t + SHIP : 0) + " บาท (รวมค่าส่ง " + SHIP + " บาท)</b>";
+}
+show();
+$("#f").onsubmit = async e => {
+e.preventDefault(); const o = Object.fromEntries(new FormData(e.target)), b = $("#f button");
+if (!Object.values(cart()).some(q => q)) return $("#m").textContent = "กรุณาเลือกสินค้าก่อน";
+b.disabled = true; $("#m").textContent = "กำลังบันทึก...";
+try {
+const r = await api({action: "order", cart: cart(), name: o.name, phone: o.phone, zip: o.zip, note: o.note, address: [o.a, "ต./แขวง " + o.b, "อ./เขต " + o.d, "จ." + o.e].join(" ")});
+if (r.error) throw r.error;
+localStorage.removeItem("cart"); location = "thankyou.html?id=" + r.id + "&t=" + r.total;
+} catch (x) { $("#m").textContent = "บันทึกไม่สำเร็จ: " + x; b.disabled = false; }
+};
+</script></html>
